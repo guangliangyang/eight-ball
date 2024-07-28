@@ -1,0 +1,79 @@
+eight-ball
+
+ball
+    cue ball: 白球
+    Solid Ball : 全色球
+    Striped Ball: 花色球
+    Eight Ball: 黑球
+
+Pocket
+    Corner Pocket： 角袋
+    Side Pocket: 中袋
+
+Cue 球杆
+    cue stick: 球杆
+    Tip:球杆尖
+    Ferrule: 球杆冒，连接cue 和 tip
+
+==========================================================================
+Ball (球):
+
+    Cue Ball: 主球，通常是白色的，用于击打其他球。
+    Object Ball: 目标球，被主球击打的球。
+    Solid Ball: 全色球，编号1到7的球。
+    Striped Ball: 花色球，编号9到15的球。
+    Eight Ball: 8号球，黑色的，在比赛中最后一个被击打入袋的球。
+
+Pocket (球袋):
+
+    Corner Pocket: 角袋，位于台球桌四个角的位置。
+    Side Pocket: 中袋，位于台球桌两侧中间的位置。
+
+
+Table (台球桌):
+
+    Cushion: 台球桌的边缘部分，球碰到边缘时会弹回。
+    Rail: 台球桌的边框，包含cushion。
+    Cloth: 覆盖在台球桌表面的布料，通常是绿色的。
+
+Cue (球杆):
+
+    Cue Stick: 球杆，用于击打主球。
+    Tip: 球杆尖端，用于直接击打主球的部分。
+    Ferrule: 球杆上连接杆身和杆头的部分。
+
+规则和技术相关词汇
+
+Break (开球):
+
+    Break Shot: 开球，游戏开始时的第一杆。
+
+Shot (击球):
+
+    Stroke: 击球动作。
+    Scratch: 白球入袋，属于犯规。
+    Bank Shot: 反弹击球，球经过台球桌边缘后入袋。
+    Combination Shot: 组合击球，通过一颗球击打另一颗球入袋。
+    Jump Shot: 跳球，白球被击打跳起，越过障碍球。
+    Masse Shot: 弯杆击球，球杆垂直或接近垂直，击打白球使其沿弧线运行。
+
+Foul (犯规):
+
+    Foul: 犯规行为，例如白球入袋或没有合法击打目标球。
+    Inning: 一轮，每个选手在自己的轮次中连续击球，直到失误或犯规。
+
+Position Play (位置控制):
+
+    Position Play: 击球后控制白球的位置，为下一杆创造有利条件。
+    Safety: 防守击球，使对手处于不利的击球位置。
+
+
+Rack (球框):
+
+    Rack: 球框，用于将球排列成标准的三角形或菱形。
+    Rack Position: 球框的位置，通常放置在台球桌的中心点。
+
+Run (连续得分):
+
+    Run: 一次轮次内连续击球入袋的球数。
+    Run Out: 清台，一次轮次内将所有目标球和8号球全部击打入袋。

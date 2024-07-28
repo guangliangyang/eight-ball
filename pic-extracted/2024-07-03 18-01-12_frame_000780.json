@@ -1,0 +1,346 @@
+{
+  "version": "4.5.12",
+  "flags": {},
+  "shapes": [
+    {
+      "label": "corner-pocket",
+      "points": [
+        [
+          1679.7222222222222,
+          818.0
+        ],
+        [
+          1707.5,
+          844.3888888888889
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "corner-pocket",
+      "points": [
+        [
+          1638.0555555555557,
+          68.0
+        ],
+        [
+          1607.5,
+          83.27777777777777
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "corner-pocket",
+      "points": [
+        [
+          149.16666666666669,
+          77.72222222222223
+        ],
+        [
+          183.88888888888889,
+          101.33333333333337
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "corner-pocket",
+      "points": [
+        [
+          142.22222222222223,
+          854.1111111111112
+        ],
+        [
+          111.66666666666669,
+          874.9444444444445
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "side-pocket",
+      "points": [
+        [
+          903.3333333333334,
+          48.55555555555557
+        ],
+        [
+          926.9444444444445,
+          76.33333333333337
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "side-pocket",
+      "points": [
+        [
+          924.1666666666666,
+          849.9444444444445
+        ],
+        [
+          935.2777777777777,
+          881.888888888889
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "cue-ball",
+      "points": [
+        [
+          890.8333333333334,
+          427.7222222222223
+        ],
+        [
+          906.1111111111112,
+          434.66666666666674
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "solid-ball",
+      "points": [
+        [
+          1161.6666666666667,
+          368.0
+        ],
+        [
+          1175.5555555555557,
+          386.05555555555554
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "solid-ball",
+      "points": [
+        [
+          1151.9444444444446,
+          306.8888888888889
+        ],
+        [
+          1135.2777777777778,
+          319.3888888888889
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "solid-ball",
+      "points": [
+        [
+          620.0,
+          118.0
+        ],
+        [
+          643.6111111111111,
+          124.94444444444446
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "solid-ball",
+      "points": [
+        [
+          979.7222222222223,
+          698.5555555555555
+        ],
+        [
+          999.1666666666667,
+          713.8333333333334
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "solid-ball",
+      "points": [
+        [
+          656.1111111111111,
+          390.2222222222223
+        ],
+        [
+          676.9444444444445,
+          398.55555555555554
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "solid-ball",
+      "points": [
+        [
+          483.8888888888889,
+          212.44444444444446
+        ],
+        [
+          501.94444444444446,
+          223.55555555555554
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "solid-ball",
+      "points": [
+        [
+          445.0,
+          201.33333333333337
+        ],
+        [
+          463.0555555555556,
+          212.44444444444446
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "eight-ball",
+      "points": [
+        [
+          421.3888888888889,
+          563.8333333333334
+        ],
+        [
+          439.44444444444446,
+          576.3333333333334
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "striped-ball",
+      "points": [
+        [
+          440.83333333333337,
+          770.7777777777778
+        ],
+        [
+          464.44444444444446,
+          784.6666666666667
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "striped-ball",
+      "points": [
+        [
+          518.6111111111111,
+          559.6666666666667
+        ],
+        [
+          539.4444444444445,
+          572.1666666666667
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "striped-ball",
+      "points": [
+        [
+          595.0,
+          411.05555555555554
+        ],
+        [
+          615.8333333333334,
+          424.94444444444446
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "striped-ball",
+      "points": [
+        [
+          745.0,
+          426.33333333333337
+        ],
+        [
+          764.4444444444445,
+          445.7777777777778
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "striped-ball",
+      "points": [
+        [
+          763.0555555555555,
+          516.6111111111111
+        ],
+        [
+          789.4444444444445,
+          526.3333333333334
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    },
+    {
+      "label": "striped-ball",
+      "points": [
+        [
+          170.0,
+          326.33333333333337
+        ],
+        [
+          193.61111111111111,
+          337.44444444444446
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "circle",
+      "flags": {}
+    }
+  ],
+  "imagePath": "2024-07-03 18-01-12_frame_000780.jpg",
+  "imageData": null,
+  "imageHeight": 1080,
+  "imageWidth": 1920
+}
