@@ -190,12 +190,16 @@ def get_heatmap_settings():
 
 class EightBallGame:
     def __init__(self):
+        self.templates = {"EightBall": []}
+        self.keypoints_data = []
         self.video_playing = False
         self.video_length = 0
         self.current_frame = 0
         self.cap = None
+        self.TEMPLATES_FILE = 'templates.csv'
         self.video_path = os.path.join('..', 'mp4', '2024-07-03 18-01-12.mp4')
         self.reset_variables()
+        self.load_templates_from_csv()
         self.cap = None
         self.fps = 0
         self.delay = 0
@@ -214,6 +218,8 @@ class EightBallGame:
             'depth': [],
             'overall': []
         }
+        self.template_match_counts = {"EightBall": {}}
+        self.last_matched_templates = {"EightBall": set()}
 
     def initialize_video_capture(self, source):
         self.cap = cv2.VideoCapture(source)
@@ -232,7 +238,20 @@ class EightBallGame:
             self.cap.release()
             self.cap = None
 
-
+    def load_templates_from_csv(self):
+        self.templates = {"EightBall": []}
+        if os.path.exists(self.TEMPLATES_FILE):
+            try:
+                with open(self.TEMPLATES_FILE, mode='r') as file:
+                    reader = csv.reader(file)
+                    next(reader)
+                    for row in reader:
+                        name = row[0]
+                        category = row[1]
+                        data = eval(row[2])
+                        self.templates[category].append({'name': name, 'data': data})
+            except (IOError, csv.Error) as e:
+                print("Error", f"Failed to load templates from CSV: {e}")
 
     def process_video(self, frame):
         timers = {}
@@ -254,6 +273,7 @@ class EightBallGame:
 
         # YOLO inference for eight-ball detection
         detected_objects = self.detect_eight_ball(frame, model)
+        print(detected_objects)
 
         timers['yolo_detection'] = time.time() - start_time
         start_time = time.time()
@@ -287,24 +307,7 @@ class EightBallGame:
         return canvas
 
     def detect_eight_ball(self, frame, model):
-        # 记录开始时间
-        start_time = time.time()
-
-        # 压缩分辨率到原来的1/4
-        small_frame = cv2.resize(frame, (frame.shape[1] // 4, frame.shape[0] // 4))
-
-        # 记录resize时间
-        resize_time = time.time() - start_time
-        print(f"Resize Time: {resize_time:.4f} seconds")
-
-        # 调用模型进行检测
-        detection_start_time = time.time()
-        results = model(small_frame)
-
-        # 记录模型检测时间
-        model_detection_time = time.time() - detection_start_time
-        print(f"Model Detection Time: {model_detection_time:.4f} seconds")
-
+        results = model(frame)
         detected_objects = []
 
         for result in results:
@@ -764,7 +767,13 @@ class EightBallApp:
                     self.mode = "real_time"
                     self.update_mode_label_and_reset_var()
                     self.start_real_time_analysis()
-
+            elif event.key == pygame.K_F6:
+                self.stop_video_analysis_thread()
+                if any(self.eight_ball_game.templates.values()):
+                    self.eight_ball_game.close_camera()
+                    self.mode = "video"
+                    self.update_mode_label_and_reset_var()
+                    self.start_video_analysis()
             elif event.key == pygame.K_F1:
                 self.detect_and_save_corners()
 
