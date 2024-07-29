@@ -1,13 +1,10 @@
 import os
-import json
 import shutil
+import json
+import random
 from ultralytics import YOLO
 from PIL import Image
-from collections import Counter
-
-def get_bounding_box(points):
-    x_coords, y_coords = zip(*points)
-    return min(x_coords), min(y_coords), max(x_coords), max(y_coords)
+from utils.format_conversion import labelme_to_yolo, yolo_to_labelme
 
 def main():
     # 获取当前脚本的绝对路径
@@ -49,6 +46,7 @@ def main():
 
     # 为每个类别分配一个唯一的ID
     class_to_id = {name: i for i, name in enumerate(sorted(class_names))}
+    id_to_class = {i: name for name, i in class_to_id.items()}
 
     # 第二遍扫描，生成标签文件并复制图片到dataset目录
     for filename in os.listdir(image_dir):
@@ -57,36 +55,10 @@ def main():
             json_path = os.path.join(image_dir, filename.replace('.jpg', '.json'))
 
             if os.path.exists(json_path):
-                with open(json_path, 'r') as f:
-                    label_data = json.load(f)
-
                 img = Image.open(image_path)
                 width, height = img.size
 
-                labels = []
-                for shape in label_data['shapes']:
-                    class_name = shape['label']
-                    shape_type = shape['shape_type']
-                    points = shape['points']
-
-                    combined_class = f"{class_name}_{shape_type}"
-                    class_id = class_to_id[combined_class]
-
-                    if shape_type == 'circle':
-                        center_x, center_y = points[0]
-                        radius_point_x, radius_point_y = points[1]
-                        radius = ((radius_point_x - center_x) ** 2 + (radius_point_y - center_y) ** 2) ** 0.5
-                        x1, y1 = center_x - radius, center_y - radius
-                        x2, y2 = center_x + radius, center_y + radius
-                    else:  # line 或其他形状
-                        x1, y1, x2, y2 = get_bounding_box(points)
-
-                    center_x = (x1 + x2) / (2 * width)
-                    center_y = (y1 + y2) / (2 * height)
-                    box_width = abs(x2 - x1) / width
-                    box_height = abs(y2 - y1) / height
-
-                    labels.append(f"{class_id} {center_x} {center_y} {box_width} {box_height}")
+                labels = labelme_to_yolo(json_path, width, height, class_to_id)
 
                 # 复制图片到dataset目录
                 new_image_path = os.path.join(dataset_dir, filename)
@@ -120,12 +92,10 @@ def main():
     print(f"标签文件数量: {len([f for f in os.listdir(dataset_dir) if f.endswith('.txt')])}")
 
     # 检查几个随机的标签文件
-    import random
-
     label_files = [f for f in os.listdir(dataset_dir) if f.endswith('.txt')]
     for _ in range(min(5, len(label_files))):
         random_label = random.choice(label_files)
-        print(f"\n内容of {random_label}:")
+        print(f"\n内容 of {random_label}:")
         with open(os.path.join(dataset_dir, random_label), 'r') as f:
             print(f.read())
 

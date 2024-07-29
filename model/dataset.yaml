@@ -1,0 +1,11 @@
+train: C:\Users\PingPong\workspace\eight-ball\dataset
+val: C:\Users\PingPong\workspace\eight-ball\dataset
+nc: 7
+names:
+  0: 'corner-pocket_circle'
+  1: 'cue-ball_circle'
+  2: 'cue_line'
+  3: 'eight-ball_circle'
+  4: 'side-pocket_circle'
+  5: 'solid-ball_circle'
+  6: 'striped-ball_circle'

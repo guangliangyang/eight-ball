@@ -1,0 +1,7 @@
+corner-pocket_circle
+cue-ball_circle
+cue_line
+eight-ball_circle
+side-pocket_circle
+solid-ball_circle
+striped-ball_circle

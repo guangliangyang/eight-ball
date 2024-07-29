@@ -3,8 +3,9 @@ import shutil
 import yaml
 from ultralytics import YOLO
 from PIL import Image
+import json  # 确保 json 已导入
 import numpy as np  # 确保 numpy 已安装并导入
-
+from utils.format_conversion import yolo_to_labelme
 
 def main():
     # 获取当前脚本的绝对路径
@@ -35,6 +36,9 @@ def main():
     with open(classes_txt_path, 'w') as f:
         for class_name in class_names:
             f.write(f"{class_name}\n")
+
+    # 创建类ID到类名的映射
+    id_to_class = {i: name for i, name in enumerate(class_names)}
 
     # 处理没有 JSON 标注文件的前10张图片
     count = 0
@@ -83,9 +87,14 @@ def main():
                 with open(txt_save_path, 'w') as f:
                     f.write('\n'.join(sorted_annotations))
 
+                # 生成 Labelme 格式的 JSON 文件
+                labelme_data = yolo_to_labelme(txt_save_path, width, height, id_to_class)
+                labelme_json_path = os.path.join(auto_annotation_dir, filename.replace('.jpg', '.json'))
+                with open(labelme_json_path, 'w') as f:
+                    json.dump(labelme_data, f, indent=4)
+
                 # 复制原图到 auto_annotation_dir
                 shutil.copy(image_path, auto_annotation_dir)
-
 
 if __name__ == '__main__':
     main()
