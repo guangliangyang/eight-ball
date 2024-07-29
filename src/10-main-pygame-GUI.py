@@ -190,16 +190,12 @@ def get_heatmap_settings():
 
 class EightBallGame:
     def __init__(self):
-        self.templates = {"EightBall": []}
-        self.keypoints_data = []
         self.video_playing = False
         self.video_length = 0
         self.current_frame = 0
         self.cap = None
-        self.TEMPLATES_FILE = 'templates.csv'
         self.video_path = os.path.join('..', 'mp4', '2024-07-03 18-01-12.mp4')
         self.reset_variables()
-        self.load_templates_from_csv()
         self.cap = None
         self.fps = 0
         self.delay = 0
@@ -209,17 +205,8 @@ class EightBallGame:
         self.corners = load_corners_from_file()
 
     def reset_variables(self):
-        self.previous_midpoint = None
         self.previous_time = None
         self.start_time = time.time()
-        self.speeds = {
-            'forward': [],
-            'sideways': [],
-            'depth': [],
-            'overall': []
-        }
-        self.template_match_counts = {"EightBall": {}}
-        self.last_matched_templates = {"EightBall": set()}
 
     def initialize_video_capture(self, source):
         self.cap = cv2.VideoCapture(source)
@@ -238,26 +225,12 @@ class EightBallGame:
             self.cap.release()
             self.cap = None
 
-    def load_templates_from_csv(self):
-        self.templates = {"EightBall": []}
-        if os.path.exists(self.TEMPLATES_FILE):
-            try:
-                with open(self.TEMPLATES_FILE, mode='r') as file:
-                    reader = csv.reader(file)
-                    next(reader)
-                    for row in reader:
-                        name = row[0]
-                        category = row[1]
-                        data = eval(row[2])
-                        self.templates[category].append({'name': name, 'data': data})
-            except (IOError, csv.Error) as e:
-                print("Error", f"Failed to load templates from CSV: {e}")
+
 
     def process_video(self, frame):
         timers = {}
         start_time = time.time()
 
-        match_results = {"EightBall": {}}
         if self.CV_CUDA_ENABLED:
             cv2.cuda.setDevice(1)
 
@@ -320,11 +293,8 @@ class EightBallGame:
         return detected_objects
 
     def analyze_video(self, queue):
-        self.new_frame = False
-        self.frame_to_show = None
 
         self.initialize_video_capture(self.video_path)
-        self.keypoints_data = []
         self.video_length = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
         self.current_frame = 0
         self.video_playing = True
@@ -767,13 +737,7 @@ class EightBallApp:
                     self.mode = "real_time"
                     self.update_mode_label_and_reset_var()
                     self.start_real_time_analysis()
-            elif event.key == pygame.K_F6:
-                self.stop_video_analysis_thread()
-                if any(self.eight_ball_game.templates.values()):
-                    self.eight_ball_game.close_camera()
-                    self.mode = "video"
-                    self.update_mode_label_and_reset_var()
-                    self.start_video_analysis()
+
             elif event.key == pygame.K_F1:
                 self.detect_and_save_corners()
 
