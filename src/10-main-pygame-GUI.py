@@ -32,19 +32,27 @@ csv.field_size_limit(2147483647)
 # 全局常量
 REAL_TABLE_WIDTH_M = 1.27  # 球台宽度，单位：米
 REAL_TABLE_LENGTH_M = 2.54  # 球台长度，单位：米
-GRID_SIZE = (16, 32)
+GRID_SIZE = (4, 8)
 
-SYS_TITLE = "Statistics of Eight Ball"
+SYS_TITLE = "Statistics of Eight-Ball Pool"
 GOLDEN_RATIO = 1.618
 DEBUG = True
 CONFIG_FILE = 'corner_pockets_config.json'
 CORNER_POCKET_YOLO_CLASS_INDEX = 0
 
+UPDATE_INTERVAL_SKELETON_SURFACE_MS = 100
+UPDATE_INTERVAL_STATISTICS_TABLE_MS = 100
+UPDATE_INTERVAL_DATA_PANEL_S = 5
 
 
-
-def normalize_coordinates(coords, width, height):
-    return [(int(x * width), int(y * height)) for (x, y) in coords]
+def get_heatmap_settings():
+    # 定义自定义颜色映射，从黑色 -> 蓝色 -> 白色
+    colors = [(0, 0, 0), (0, 0, 1), (1, 1, 1)]  # 黑色, 蓝色, 白色
+    cmap_name = 'custom_blue_white'
+    n_bins = 100  # 使用100个颜色等级
+    cmap = mcolors.LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
+    norm = mcolors.Normalize(vmin=0, vmax=100)
+    return norm, cmap
 
 
 def save_corners_to_file(corners, filename=CONFIG_FILE):
@@ -93,10 +101,10 @@ def draw_grid_on_pockets(frame, corners, grid_size):
     bottom_right = corners[3]
 
     # 绘制四个角点之间的矩形
-    cv2.line(frame, top_left, top_right, (0, 255, 0), 2)
-    cv2.line(frame, top_left, bottom_left, (0, 255, 0), 2)
-    cv2.line(frame, bottom_left, bottom_right, (0, 255, 0), 2)
-    cv2.line(frame, top_right, bottom_right, (0, 255, 0), 2)
+    cv2.line(frame, top_left, top_right, (255, 255, 255), 4)
+    cv2.line(frame, top_left, bottom_left, (255, 255, 255), 4)
+    cv2.line(frame, bottom_left, bottom_right, (255, 255, 255), 4)
+    cv2.line(frame, top_right, bottom_right, (255, 255, 255), 4)
 
     # 计算网格间距
     grid_rows, grid_cols = grid_size
@@ -109,15 +117,14 @@ def draw_grid_on_pockets(frame, corners, grid_size):
     for i in range(1, grid_rows):
         start_point = (top_left[0], int(top_left[1] + i * row_step))
         end_point = (top_right[0], int(top_right[1] + i * row_step))
-        cv2.line(frame, start_point, end_point, (255, 0, 0), 1)
+        cv2.line(frame, start_point, end_point, (255, 255, 255), 4)
 
     for j in range(1, grid_cols):
         start_point = (int(top_left[0] + j * col_step), top_left[1])
         end_point = (int(bottom_left[0] + j * col_step), bottom_left[1])
-        cv2.line(frame, start_point, end_point, (255, 0, 0), 1)
+        cv2.line(frame, start_point, end_point, (255, 255, 255), 4)
 
     return frame
-
 
 def calculate_calories_burned(met, weight_kg, duration_minutes):
     calories_burned_per_minute = (met * weight_kg * 3.5) / 200
@@ -172,9 +179,6 @@ def calculate_layout(total_width, total_height, title_label_height, video_height
         print(regions)
 
     return regions
-
-
-
 def get_heatmap_settings():
     colors = [(0, 0, 0), (0, 0, 1), (1, 1, 1)]  # 黑色, 蓝色, 白色
     cmap_name = 'custom_blue_white'
@@ -186,17 +190,12 @@ def get_heatmap_settings():
 
 class EightBallGame:
     def __init__(self):
-        self.templates = {"EightBall": []}
-        self.recording = False
-        self.keypoints_data = []
         self.video_playing = False
         self.video_length = 0
         self.current_frame = 0
         self.cap = None
-        self.TEMPLATES_FILE = 'templates.csv'
         self.video_path = os.path.join('..', 'mp4', '2024-07-03 18-01-12.mp4')
         self.reset_variables()
-        self.load_templates_from_csv()
         self.cap = None
         self.fps = 0
         self.delay = 0
@@ -215,8 +214,6 @@ class EightBallGame:
             'depth': [],
             'overall': []
         }
-        self.template_match_counts = {"EightBall": {}}
-        self.last_matched_templates = {"EightBall": set()}
 
     def initialize_video_capture(self, source):
         self.cap = cv2.VideoCapture(source)
@@ -235,20 +232,7 @@ class EightBallGame:
             self.cap.release()
             self.cap = None
 
-    def load_templates_from_csv(self):
-        self.templates = {"EightBall": []}
-        if os.path.exists(self.TEMPLATES_FILE):
-            try:
-                with open(self.TEMPLATES_FILE, mode='r') as file:
-                    reader = csv.reader(file)
-                    next(reader)
-                    for row in reader:
-                        name = row[0]
-                        category = row[1]
-                        data = eval(row[2])
-                        self.templates[category].append({'name': name, 'data': data})
-            except (IOError, csv.Error) as e:
-                print("Error", f"Failed to load templates from CSV: {e}")
+
 
     def process_video(self, frame):
         timers = {}
@@ -267,30 +251,20 @@ class EightBallGame:
             self.image_width = image.shape[1]
             self.image_height = image.shape[0]
 
-        keypoints = []
-        current_speed = {
-            'overall': 0
-        }
-
-        if self.recording:
-            self.keypoints_data.append(keypoints)
-
-        timers['keypoints_processing'] = time.time() - start_time
-        start_time = time.time()
 
         # YOLO inference for eight-ball detection
         detected_objects = self.detect_eight_ball(frame, model)
-        print(detected_objects)
-
-        # Draw bounding boxes and grid on a separate canvas
-        canvas = self.draw_bounding_boxes_and_grid(image, detected_objects, self.corners)
 
         timers['yolo_detection'] = time.time() - start_time
         start_time = time.time()
 
+        # Draw bounding boxes and grid on a separate canvas
+        canvas = self.draw_bounding_boxes_and_grid(image, detected_objects, self.corners)
+
+        timers['draw_bounding_boxes_and_grid'] = time.time() - start_time
+
         output_image = image
 
-        timers['process_speeds_and_highlight_ratios'] = time.time() - start_time
 
         if DEBUG:
             for step, duration in timers.items():
@@ -303,11 +277,8 @@ class EightBallGame:
         canvas = np.zeros_like(frame)
 
         # 标注YOLO对象点
-        for (x1, y1, x2, y2, coord_text, cls) in detected_objects:
-            center_x = int((x1 + x2) / 2)
-            center_y = int((y1 + y2) / 2)
-            cv2.circle(canvas, (center_x, center_y), 5, (0, 255, 0), -1)
-            cv2.putText(canvas, coord_text, (center_x + 10, center_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        for (x1, y1, x2, y2, _, _) in detected_objects:
+            cv2.rectangle(canvas, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
         # 绘制网格
         if corners:
@@ -316,7 +287,24 @@ class EightBallGame:
         return canvas
 
     def detect_eight_ball(self, frame, model):
-        results = model(frame)
+        # 记录开始时间
+        start_time = time.time()
+
+        # 压缩分辨率到原来的1/4
+        small_frame = cv2.resize(frame, (frame.shape[1] // 4, frame.shape[0] // 4))
+
+        # 记录resize时间
+        resize_time = time.time() - start_time
+        print(f"Resize Time: {resize_time:.4f} seconds")
+
+        # 调用模型进行检测
+        detection_start_time = time.time()
+        results = model(small_frame)
+
+        # 记录模型检测时间
+        model_detection_time = time.time() - detection_start_time
+        print(f"Model Detection Time: {model_detection_time:.4f} seconds")
+
         detected_objects = []
 
         for result in results:
@@ -324,9 +312,7 @@ class EightBallGame:
             for box in boxes:
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
                 cls = int(box.cls[0])
-
-                coord_text = f'{cls}({x1}, {y1}, {x2}, {y2})'
-                detected_objects.append((x1, y1, x2, y2, coord_text, cls))
+                detected_objects.append((x1, y1, x2, y2, "", cls))
 
         return detected_objects
 
@@ -386,6 +372,8 @@ class EightBallApp:
         self.norm, self.cmap = get_heatmap_settings()
         self.first_data_update = True
         self.mode = "video"
+        self.overlay_enabled = False
+        self.regions_swapped = False
 
         self.queue = queue.Queue(maxsize=1)
 
@@ -404,10 +392,12 @@ class EightBallApp:
         self.layout = calculate_layout(self.window_width, self.window_height, title_label_height, video_height,
                                        left_ratio, mode_label_height)
 
-        self.data_panel_update_interval = 5.0
+        self.data_panel_update_interval = UPDATE_INTERVAL_DATA_PANEL_S
         self.speed_update_interval = 1.0
         self.data_panel_last_update_time = None
         self.speed_last_update_time = None
+        self.skeleton_last_update_time = None
+        self.statistics_table_last_update_time = None
 
         self.setup_ui()
 
@@ -452,25 +442,31 @@ class EightBallApp:
         plt.close(fig)
 
     def update_region6(self, canvas):
-        skeleton_image_np = np.rot90(canvas, -1)
-        skeleton_image_np = np.fliplr(skeleton_image_np)
+        current_time = time.time()
+        if self.skeleton_last_update_time is None or current_time - self.skeleton_last_update_time >= UPDATE_INTERVAL_SKELETON_SURFACE_MS / 1000.0:
+            self.skeleton_last_update_time = current_time
 
-        skeleton_surface = pygame.surfarray.make_surface(skeleton_image_np)
+            skeleton_image_np = np.rot90(canvas, -1)
+            skeleton_image_np = np.fliplr(skeleton_image_np)
 
-        skeleton_surface = pygame.transform.scale(skeleton_surface, (
-            self.layout['region6']['width'], self.layout['region6']['height']))
-        self.screen.blit(skeleton_surface, (self.layout['region6']['x'], self.layout['region6']['y']))
+            skeleton_surface = pygame.surfarray.make_surface(skeleton_image_np)
 
-        pygame.display.update()
+            if self.regions_swapped:
+                display_region = self.layout['region2_3_combined']
+            else:
+                display_region = self.layout['region6']
+
+            skeleton_surface = pygame.transform.scale(skeleton_surface, (
+                display_region['width'], display_region['height']))
+            self.screen.blit(skeleton_surface, (display_region['x'], display_region['y']))
+
+            pygame.display.update()
 
     def stop_video_analysis_thread(self):
         if self.video_thread is not None:
             self.eight_ball_game.stop_video_analysis()
             self.video_thread.join(timeout=5)
             self.video_thread = None
-
-    def update_grid_count_bar_chart(self):
-        pass  # Implement as needed
 
     def update_mode_surface(self):
         mode_text = self.mode.replace("_", " ").title()
@@ -518,118 +514,114 @@ class EightBallApp:
         label_surface = pygame_font.render(text, True, pygame.Color(fg), pygame.Color(bg))
         return label_surface
 
-    def update_video_panel(self, image):
+    def update_video_panel(self, image, canvas):
         frame = np.array(image)
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         frame = cv2.flip(frame, 1)
 
-        frame_height, frame_width = frame.shape[:2]
+        if self.overlay_enabled:
+            canvas = cv2.cvtColor(canvas, cv2.COLOR_RGB2BGR)
+            canvas = cv2.flip(canvas, 1)
+            overlay = cv2.addWeighted(frame, 0.7, canvas, 0.3, 0)
+        else:
+            overlay = frame
 
-        scale = min(self.layout['region2_3_combined']['width'] / frame_width,
-                    self.layout['region2_3_combined']['height'] / frame_height)
+        if self.regions_swapped:
+            display_region = self.layout['region6']
+        else:
+            display_region = self.layout['region2_3_combined']
+
+        frame_height, frame_width = overlay.shape[:2]
+
+        scale = min(display_region['width'] / frame_width,
+                    display_region['height'] / frame_height)
 
         new_width = int(frame_width * scale)
         new_height = int(frame_height * scale)
 
-        frame_resized = cv2.resize(frame, (new_width, new_height))
+        overlay_resized = cv2.resize(overlay, (new_width, new_height))
 
         self.video_surface.fill((0, 0, 0))
 
-        frame_resized = np.rot90(frame_resized)
-        frame_resized = pygame.surfarray.make_surface(frame_resized)
+        overlay_resized = np.rot90(overlay_resized)
+        overlay_resized = pygame.surfarray.make_surface(overlay_resized)
 
-        self.video_surface.blit(frame_resized, (
-            (self.layout['region2_3_combined']['width'] - new_width) // 2,
-            (self.layout['region2_3_combined']['height'] - new_height) // 2))
+        self.video_surface.blit(overlay_resized, (
+            (display_region['width'] - new_width) // 2,
+            (display_region['height'] - new_height) // 2))
         self.screen.blit(self.video_surface,
-                         (self.layout['region2_3_combined']['x'], self.layout['region2_3_combined']['y']))
+                         (display_region['x'], display_region['y']))
 
         pygame.display.update()
 
     def update_skeleton_surface(self, skeleton_canvas):
-        skeleton_image_np = np.rot90(skeleton_canvas, -1)
-        skeleton_image_np = np.fliplr(skeleton_image_np)
+        current_time = time.time()
+        if self.skeleton_last_update_time is None or current_time - self.skeleton_last_update_time >= UPDATE_INTERVAL_SKELETON_SURFACE_MS / 1000.0:
+            self.skeleton_last_update_time = current_time
 
-        skeleton_surface = pygame.surfarray.make_surface(skeleton_image_np)
+            skeleton_image_np = np.rot90(skeleton_canvas, -1)
+            skeleton_image_np = np.fliplr(skeleton_image_np)
 
-        skeleton_surface = pygame.transform.scale(skeleton_surface, (
-            self.layout['region6']['width'], self.layout['region6']['height']))
-        self.screen.blit(skeleton_surface, (self.layout['region6']['x'], self.layout['region6']['y']))
+            skeleton_surface = pygame.surfarray.make_surface(skeleton_image_np)
 
-        pygame.display.update()
+            skeleton_surface = pygame.transform.scale(skeleton_surface, (
+                self.layout['region6']['width'], self.layout['region6']['height']))
+            self.screen.blit(skeleton_surface, (self.layout['region6']['x'], self.layout['region6']['y']))
 
-    def update_data_panel(self, keypoints, match_results, speeds, swing_count, step_count):
+            pygame.display.update()
+
+
+    def update_data_panel(self, corner_pocket_counts, side_pocket_counts, total_counts, calories_burned,
+                          calories_burned_per_hour, intensity, duration):
         current_time = time.time()
 
         if self.data_panel_last_update_time is None:
-            self.data_panel_last_update_time = current_time - 100
+            self.data_panel_last_update_time = current_time - 100000
 
         if current_time - self.data_panel_last_update_time < self.data_panel_update_interval:
             return
 
         self.data_panel_last_update_time = current_time
 
-        total_matches = {category: sum(self.eight_ball_game.template_match_counts[category].values()) for category in
-                         self.eight_ball_game.template_match_counts}
-
         panel_surface = pygame.Surface((self.layout['region7']['width'], self.layout['region7']['height']))
         panel_surface.fill((255, 255, 255))
         y_offset = 10
 
-        weight_kg = 70
-        total_frames = eight_ball_game.frame_count
-        fps = eight_ball_game.get_fps()
-        total_time_minutes = total_frames / (fps * 60)
+        norm, cmap = get_heatmap_settings()
 
-        average_speed = speeds['overall']['avg']
-        estimated_met = estimate_met(average_speed, step_count, swing_count)
-        calories_burned = calculate_calories_burned(estimated_met, weight_kg, total_time_minutes)
-        calories_burned_per_hour, intensity = calculate_calories_burned_per_hour(calories_burned, total_time_minutes)
+        # 口袋进球数量统计
+        pockets = [
+            ("Top Left Pocket", corner_pocket_counts[0]),
+            ("Top Middle Pocket", side_pocket_counts[0]),
+            ("Top Right Pocket", corner_pocket_counts[1]),
+            ("Bottom Left Pocket", corner_pocket_counts[2]),
+            ("Bottom Middle Pocket", side_pocket_counts[1]),
+            ("Bottom Right Pocket", corner_pocket_counts[3])
+        ]
 
-        for category, templates in self.eight_ball_game.templates.items():
-            count_text = f"Swings: {swing_count}" if category == "EightBall" else f"Steps: {step_count}"
-
+        for pocket, count in pockets:
+            percentage = (count / total_counts) * 100 if total_counts > 0 else 0
+            text = f"{pocket}: {percentage:.1f}%"
             font = pygame.font.SysFont("Arial", 22)
-            text_surface = font.render(count_text, True, (0, 0, 0))
-            text_width, text_height = text_surface.get_size()
-            bg_rect = pygame.Rect(10, y_offset, panel_surface.get_width() - 20, text_height + 10)
-            pygame.draw.rect(panel_surface, (211, 211, 211), bg_rect)
+            text_surface = font.render(text, True, (0, 0, 0))
+            panel_surface.blit(text_surface, (10, y_offset))
+            y_offset += text_surface.get_height() + 5
 
-            text_x = bg_rect.x + (bg_rect.width - text_width) // 2
-            text_y = bg_rect.y + 5
-            panel_surface.blit(text_surface, (text_x, text_y))
-            y_offset += bg_rect.height + 5
+            bar_x = 10
+            bar_y = y_offset
+            bar_width = self.layout['region7']['width'] - 20
+            bar_height = 20
+            pygame.draw.rect(panel_surface, (211, 211, 211), (bar_x, bar_y, bar_width, bar_height))
 
-            template_names = [template['name'] for template in templates]
-            match_counts = [self.eight_ball_game.template_match_counts[category].get(template['name'], 0) for template
-                            in templates]
-            match_percentages = [(count / total_matches[category] * 100) if total_matches[category] > 0 else 0 for
-                                 count in match_counts]
+            color = cmap(norm(percentage))[:3]
+            color = tuple(int(c * 255) for c in color)
+            fill_width = int(bar_width * (percentage / 100))
+            pygame.draw.rect(panel_surface, color, (bar_x, bar_y, fill_width, bar_height))
+            y_offset += bar_height + 10  # 增加间隔
 
-            for template_name, percentage in zip(template_names, match_percentages):
-                font = pygame.font.SysFont("Arial", 20)
-                text_surface = font.render(f"{template_name}: {percentage:.1f}%", True, (0, 0, 0))
-                panel_surface.blit(text_surface, (10, y_offset))
-                y_offset += text_surface.get_height() + 5
+        y_offset += 20  # 空行
 
-                bar_x = 10
-                bar_y = y_offset
-                bar_width = self.layout['region7']['width'] - 20
-                bar_height = 20
-                pygame.draw.rect(panel_surface, (211, 211, 211), (bar_x, bar_y, bar_width, bar_height))
-
-                norm, cmap = get_heatmap_settings()
-                color = cmap(norm(percentage))[:3]
-                color = tuple(int(c * 255) for c in color)
-                fill_width = int(bar_width * (percentage / 100))
-                pygame.draw.rect(panel_surface, color, (bar_x, bar_y, fill_width, bar_height))
-                y_offset += bar_height + 5
-
-            y_offset += 10
-
-        pygame.draw.line(panel_surface, (0, 0, 0), (10, y_offset), (self.layout['region7']['width'] - 10, y_offset), 2)
-        y_offset += 10
-
+        # 卡路里统计信息
         font = pygame.font.SysFont("Arial", 22)
         text_surface = font.render(f"Calories Burned: {calories_burned:.1f} kcal", True, (0, 0, 0))
         panel_surface.blit(text_surface, (10, y_offset))
@@ -644,15 +636,46 @@ class EightBallApp:
         panel_surface.blit(text_surface, (10, y_offset))
         y_offset += text_surface.get_height() + 5
 
-        total_seconds = current_time - self.eight_ball_game.start_time
-        hours, rem = divmod(total_seconds, 3600)
-        minutes, seconds = divmod(rem, 60)
-        text_surface = font.render(f"Duration: {int(hours):02}:{int(minutes):02}:{int(seconds):02}", True, (0, 0, 0))
+        text_surface = font.render(f"Duration: {duration}", True, (0, 0, 0))
         panel_surface.blit(text_surface, (10, y_offset))
         y_offset += text_surface.get_height() + 5
 
         self.screen.blit(panel_surface, (self.layout['region7']['x'], self.layout['region7']['y']))
         pygame.display.update()
+
+    def update_data(self):
+
+        # 示例数据
+        corner_pocket_counts = [5, 3, 2, 4]  # 四个角袋的进球数量
+        side_pocket_counts = [6, 7]  # 两个侧袋的进球数量
+
+        total_counts = sum(corner_pocket_counts) + sum(side_pocket_counts)
+
+        # 卡路里统计信息
+        weight_kg = 70
+        total_frames = self.eight_ball_game.frame_count
+        fps = self.eight_ball_game.get_fps()
+        total_time_minutes = total_frames / (fps * 60)
+
+        # 示例速度和挥拍次数
+        average_speed = 1.2  # 单位: m/s
+        step_count = 1000
+        swing_count = 50
+
+        estimated_met = estimate_met(average_speed, step_count, swing_count)
+        calories_burned = calculate_calories_burned(estimated_met, weight_kg, total_time_minutes)
+        calories_burned_per_hour, intensity = calculate_calories_burned_per_hour(calories_burned,
+                                                                                 total_time_minutes)
+
+        total_seconds = time.time() - self.eight_ball_game.start_time
+        hours, rem = divmod(total_seconds, 3600)
+        minutes, seconds = divmod(rem, 60)
+        duration = f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}"
+
+        self.update_data_panel(corner_pocket_counts, side_pocket_counts, total_counts, calories_burned,
+                                   calories_burned_per_hour, intensity, duration)
+
+
 
     def setup_ui(self):
         self.title_surface = pygame.Surface((self.layout['region1']['width'], self.layout['region1']['height']))
@@ -697,24 +720,25 @@ class EightBallApp:
 
 
     def update_speed_stats(self, speeds):
-        # Define some example statistics data
-        stats = {
-            'cue_ball': {
-                'max_speed': 2.5,
-                'avg_speed': 1.2,
-                'max_energy': 1.8,
-                'avg_energy': 0.9
-            },
-            'player': {
-                'total_shots': 150,
-                'potting_rate': 75.0,
-                'foul_counts': 3,
-                'max_consecutive_pots': 7
+        current_time = time.time()
+        if self.statistics_table_last_update_time is None or current_time - self.statistics_table_last_update_time >= UPDATE_INTERVAL_STATISTICS_TABLE_MS / 1000.0:
+            self.statistics_table_last_update_time = current_time
+            # 更新统计表
+            stats = {
+                'cue_ball': {
+                    'max_speed': 2.5,
+                    'avg_speed': 1.2,
+                    'max_energy': 1.8,
+                    'avg_energy': 0.9
+                },
+                'player': {
+                    'total_shots': 150,
+                    'potting_rate': 75.0,
+                    'foul_counts': 3,
+                    'max_consecutive_pots': 7
+                }
             }
-        }
-
-        # Update statistics table
-        self.update_statistics_table(stats)
+            self.update_statistics_table(stats)
 
     def mps_to_kph(self, speed_mps):
         return speed_mps * 3.6
@@ -729,6 +753,10 @@ class EightBallApp:
                 self.eight_ball_game.close_camera()
                 pygame.quit()
                 sys.exit()
+            elif event.key == pygame.K_F3:
+                self.overlay_enabled = not self.overlay_enabled
+            elif event.key == pygame.K_F4:
+                self.regions_swapped = not self.regions_swapped
             elif event.key == pygame.K_F5:
                 self.stop_video_analysis_thread()
                 if self.mode != "real_time":
@@ -736,20 +764,15 @@ class EightBallApp:
                     self.mode = "real_time"
                     self.update_mode_label_and_reset_var()
                     self.start_real_time_analysis()
-            elif event.key == pygame.K_F6:
-                self.stop_video_analysis_thread()
-                if any(self.eight_ball_game.templates.values()):
-                    self.eight_ball_game.close_camera()
-                    self.mode = "video"
-                    self.update_mode_label_and_reset_var()
-                    self.start_video_analysis()
+
             elif event.key == pygame.K_F1:
                 self.detect_and_save_corners()
 
     def detect_and_save_corners(self):
         frame = self.queue.get_nowait()
         detected_objects = self.eight_ball_game.detect_eight_ball(frame, model)
-        corners = [(x1, y1) for (x1, y1, x2, y2, txt, cls) in detected_objects if cls == CORNER_POCKET_YOLO_CLASS_INDEX]
+        corners = [(int((x1 + x2) / 2), int((y1 + y2) / 2)) for (x1, y1, x2, y2, _, cls) in detected_objects if
+                   cls == CORNER_POCKET_YOLO_CLASS_INDEX]
 
         best_corners = find_best_four_corners(corners)
         if best_corners is None:
@@ -758,6 +781,7 @@ class EightBallApp:
         save_corners_to_file(best_corners)
         self.eight_ball_game.corners = best_corners
         print("Corners saved to configuration file.")
+
 
 
     def start_real_time_analysis(self):
@@ -796,8 +820,9 @@ class EightBallApp:
                 pass
             else:
                 image, canvas = self.queue.get()
-                self.update_video_panel(image)
+                self.update_video_panel(image, canvas)
                 self.update_region6(canvas)
+                self.update_data()
                 pygame.display.update()
 
 
