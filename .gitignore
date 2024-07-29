@@ -1,0 +1,6 @@
+/model/train/
+
+# Ignore all files in .idea directory
+.idea/
+
+*.cache

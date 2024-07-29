@@ -2,8 +2,8 @@ import os
 import shutil
 import yaml
 from ultralytics import YOLO
-from PIL import Image
 import json  # 确保 json 已导入
+from PIL import Image
 import numpy as np  # 确保 numpy 已安装并导入
 from utils.format_conversion import yolo_to_labelme
 

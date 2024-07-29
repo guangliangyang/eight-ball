@@ -1,0 +1,14 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+
+
+# Ignore all jpg, json, and txt files in pic-auto-annotation directory
+pic-auto-annotation/*.jpg
+pic-auto-annotation/*.json
+pic-auto-annotation/*.txt
