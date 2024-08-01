@@ -32,7 +32,6 @@
     <hr>
     <div id="theoretical-analysis" class="analysis-section">
         <div id="analysis-content">
-
         </div>
     </div>
     <script>
@@ -75,7 +74,7 @@
             const resultsContainer = document.getElementById('results-container');
             resultsContainer.innerHTML = `
                 <div class="flex-column">
-                    <h2>Eight-Ball Pool Analysis Results</h2>
+                    <h2>Eight-Ball Pool Analysis Results (Region 5)</h2>
                     <table>
                         <thead>
                             <tr>
@@ -107,10 +106,90 @@
                         Your browser does not support the video tag.
                     </video>
                 </div>
+                <div class="flex-column">
+                    <h2>Calorie and Pocket Statistics (Region 7)</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Pocket</th>
+                                <th>Count</th>
+                                <th>Percentage (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${displayPocketStats(results.corner_pocket_counts, results.side_pocket_counts, results.total_counts)}
+                        </tbody>
+                    </table>
+                    <h2>Calories Burned</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Total Calories Burned</td>
+                                <td>${results.calories_burned.toFixed(1)} kcal</td>
+                            </tr>
+                            <tr>
+                                <td>Average Calories Burned per Hour</td>
+                                <td>${results.calories_burned_per_hour.toFixed(1)} kcal</td>
+                            </tr>
+                            <tr>
+                                <td>Intensity</td>
+                                <td>${results.intensity}</td>
+                            </tr>
+                            <tr>
+                                <td>Duration</td>
+                                <td>${results.duration}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            document.getElementById('analysis-content').innerHTML = `
+                <h2>Theoretical Analysis</h2>
+                <h3>Advantages</h3>
+                <ul>
+                    ${results.theoretical_analysis.advantages.map(adv => `<li>${adv}</li>`).join('')}
+                </ul>
+                <h3>Disadvantages</h3>
+                <ul>
+                    ${results.theoretical_analysis.disadvantages.map(disadv => `<li>${disadv}</li>`).join('')}
+                </ul>
+                <h3>Strategies and Countermeasures</h3>
+                <ul>
+                    ${results.theoretical_analysis.strategies.map(strategy => `<li>${strategy}</li>`).join('')}
+                </ul>
             `;
 
             document.getElementById('uploaded-video').querySelector('source').src = 'upload/' + filename;
             document.getElementById('uploaded-video').load();
+        }
+
+        function displayPocketStats(corner_pocket_counts, side_pocket_counts, total_counts) {
+            const pockets = [
+                ["Top Left Pocket", corner_pocket_counts[0]],
+                ["Top Middle Pocket", side_pocket_counts[0]],
+                ["Top Right Pocket", corner_pocket_counts[1]],
+                ["Bottom Left Pocket", corner_pocket_counts[2]],
+                ["Bottom Middle Pocket", side_pocket_counts[1]],
+                ["Bottom Right Pocket", corner_pocket_counts[3]]
+            ];
+
+            return pockets.map(([pocket, count]) => {
+                const percentage = (count / total_counts * 100).toFixed(1);
+                return `
+                    <tr>
+                        <td>${pocket}</td>
+                        <td>${count}</td>
+                        <td>${percentage}%</td>
+                    </tr>
+                `;
+            }).join('');
         }
     </script>
 </body>

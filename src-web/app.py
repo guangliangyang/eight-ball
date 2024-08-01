@@ -16,7 +16,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['RESULT_FOLDER'] = RESULT_FOLDER
 
 # Load the YOLO model
-model_file_path = os.path.join('model', 'best.pt')
+model_file_path = os.path.join('..', 'model', 'best.pt')
 model = YOLO(model_file_path)
 
 # In-memory storage for progress tracking
@@ -85,10 +85,31 @@ def process_video(unique_id, filepath):
     cap.release()
     progress_store[unique_id]['status'] = 'completed'
     progress_store[unique_id]['results'] = {
-        'total_shots': 150,  # Example results
+        'total_shots': 150,  # Example results for region5
         'potting_rate': 75.0,
         'foul_counts': 3,
-        'max_consecutive_pots': 7
+        'max_consecutive_pots': 7,
+        'corner_pocket_counts': [5, 3, 2, 4],  # Example results for region7
+        'side_pocket_counts': [6, 7],
+        'total_counts': 150,
+        'calories_burned': 500,  # Example data
+        'calories_burned_per_hour': 300,
+        'intensity': 'Moderate',
+        'duration': '00:30:00',
+        'theoretical_analysis': {
+            'advantages': [
+                "High potting rate indicates strong offensive skills.",
+                "Consistent performance with highest consecutive potting of 7."
+            ],
+            'disadvantages': [
+                "Foul counts indicate areas of rule adherence improvement.",
+                "Need for better fitness distribution for longer matches."
+            ],
+            'strategies': [
+                "Focus on reducing fouls through practice and rule adherence.",
+                "Implement fitness training to improve endurance."
+            ]
+        }
     }
 
 
