@@ -12,15 +12,15 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import certifi
 import itertools
+import warnings
+from ultralytics import YOLO
 
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
-import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning, module='google.protobuf.symbol_database')
 warnings.filterwarnings("ignore", category=UserWarning, module='inference_feedback_manager')
 
-from ultralytics import YOLO
 
 # Load the YOLO model
 model_file_path = os.path.join('..', 'model', 'best.pt')
