@@ -30,8 +30,8 @@ model = YOLO(model_file_path)
 csv.field_size_limit(2147483647)
 
 # 全局常量
-REAL_TABLE_WIDTH_M = 1.27  # 球台宽度，单位：米
-REAL_TABLE_LENGTH_M = 2.54  # 球台长度，单位：米
+REAL_TABLE_WIDTH_M = 1.107  # 球台宽度，单位：米 (119cm, 包括8.3cm 边框）
+REAL_TABLE_LENGTH_M = 2.137  # 球台长度，单位：米(222cm, 包括8.3cm 边框）
 GRID_SIZE = (4, 8)
 
 SYS_TITLE = "Computational Statistics of Eight-Ball Pool"
