@@ -58,6 +58,11 @@ def progress_and_results(unique_id):
     return jsonify({'status': 'not found'}), 404
 
 
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+
 def process_video(unique_id, filepath):
     start_time = time.time()
     cap = cv2.VideoCapture(filepath)

@@ -13,14 +13,13 @@
                 <div class="form-row">
                     <label>Upload a Video File:</label>
                     <input type="file" name="file">
-                    <input type="submit" value="Upload" >
+                    <input type="submit" value="Upload">
                 </div>
             </form>
         </div>
         <div id="right-column">
             <div id="progress-section" style="display: none;">
-                <div id="progress-info" class="progress-info">
-                </div>
+                <div id="progress-info" class="progress-info"></div>
                 <div id="progress-bar" class="progress-bar">
                     <div id="progress" class="progress"></div>
                 </div>
@@ -31,8 +30,7 @@
     <div id="results-container" class="results-container flex-container"></div>
     <hr>
     <div id="theoretical-analysis" class="analysis-section">
-        <div id="analysis-content">
-        </div>
+        <div id="analysis-content"></div>
     </div>
     <script>
         document.getElementById('uploadForm').onsubmit = async function(event) {
@@ -57,11 +55,11 @@
 
             const progress = result.progress;
             document.getElementById('progress-info').innerText = `
-                Analysis Progress: ${progress.progress.toFixed(2)}%
-                Elapsed Time: ${progress.elapsed_time}
-                Estimated Time Remaining: ${progress.estimated_time_remaining}
+                Analysis Progress: ${progress.toFixed(2)}%
+                Elapsed Time: ${result.elapsed_time}
+                Estimated Time Remaining: ${result.estimated_time_remaining}
             `;
-            document.getElementById('progress').style.width = `${progress.progress.toFixed(2)}%`;
+            document.getElementById('progress').style.width = `${progress.toFixed(2)}%`;
 
             if (result.status === 'completed') {
                 displayResults(result.results, filename);
@@ -72,6 +70,7 @@
 
         function displayResults(results, filename) {
             const resultsContainer = document.getElementById('results-container');
+            const videoPath = `/uploads/${filename}`;
             resultsContainer.innerHTML = `
                 <div class="flex-column">
                     <h2>Eight-Ball Pool Analysis Results (Region 5)</h2>
@@ -102,9 +101,10 @@
                         </tbody>
                     </table>
                     <video controls width="600" id="uploaded-video">
-                        <source src="" type="video/mp4">
+                        <source src="${videoPath}" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
+                    <p>Video Path: ${videoPath}</p>
                 </div>
                 <div class="flex-column">
                     <h2>Calorie and Pocket Statistics (Region 7)</h2>
@@ -165,9 +165,6 @@
                     ${results.theoretical_analysis.strategies.map(strategy => `<li>${strategy}</li>`).join('')}
                 </ul>
             `;
-
-            document.getElementById('uploaded-video').querySelector('source').src = 'upload/' + filename;
-            document.getElementById('uploaded-video').load();
         }
 
         function displayPocketStats(corner_pocket_counts, side_pocket_counts, total_counts) {
