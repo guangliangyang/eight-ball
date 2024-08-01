@@ -34,6 +34,12 @@ REAL_TABLE_WIDTH_M = 1.107  # 球台宽度，单位：米 (119cm, 包括8.3cm �
 REAL_TABLE_LENGTH_M = 2.137  # 球台长度，单位：米(222cm, 包括8.3cm 边框）
 GRID_SIZE = (4, 8)
 
+#每个网格（宽度 = 1.107米 / 4 = 0.27675米，长度 = 2.137米 / 8 = 0.267125米）
+#A4纸尺寸（宽度：0.210米，长度：0.297米）
+
+#每个网格的宽度大约是A4纸宽度的1.32倍。
+#每个网格的长度大约是A4纸长度的0.90倍。
+
 SYS_TITLE = "Computational Statistics of Eight-Ball Pool"
 GOLDEN_RATIO = 1.618
 DEBUG = True
