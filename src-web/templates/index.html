@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Eight-Ball Pool Analysis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Eight-Ball Pool Analysis</h1>
+    <div id="main-container" class="flex-container">
+        <div id="left-column">
+            <form id="uploadForm" action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data">
+                <div class="form-row">
+                    <label>Upload a Video File:</label>
+                    <input type="file" name="file">
+                    <input type="submit" value="Upload" >
+                </div>
+            </form>
+        </div>
+        <div id="right-column">
+            <div id="progress-section" style="display: none;">
+                <div id="progress-info" class="progress-info">
+                </div>
+                <div id="progress-bar" class="progress-bar">
+                    <div id="progress" class="progress"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr>
+    <div id="results-container" class="results-container flex-container"></div>
+    <hr>
+    <div id="theoretical-analysis" class="analysis-section">
+        <div id="analysis-content">
+
+        </div>
+    </div>
+    <script>
+        document.getElementById('uploadForm').onsubmit = async function(event) {
+            event.preventDefault();
+            document.getElementById('progress-section').style.display = 'block';
+            const formData = new FormData(this);
+            const response = await fetch(this.action, {
+                method: this.method,
+                body: formData
+            });
+            const result = await response.json();
+            console.log('Upload response:', result);
+            if (result.status === 'processing') {
+                checkProgressAndResults(result.unique_id, result.filename);
+            }
+        };
+
+        async function checkProgressAndResults(unique_id, filename) {
+            const response = await fetch(`/progress_and_results/${unique_id}`);
+            const result = await response.json();
+            console.log('Progress and Results response:', result);
+
+            const progress = result.progress;
+            document.getElementById('progress-info').innerText = `
+                Analysis Progress: ${progress.progress.toFixed(2)}%
+                Elapsed Time: ${progress.elapsed_time}
+                Estimated Time Remaining: ${progress.estimated_time_remaining}
+            `;
+            document.getElementById('progress').style.width = `${progress.progress.toFixed(2)}%`;
+
+            if (result.status === 'completed') {
+                displayResults(result.results, filename);
+            } else {
+                setTimeout(() => checkProgressAndResults(unique_id, filename), 5000);
+            }
+        }
+
+        function displayResults(results, filename) {
+            const resultsContainer = document.getElementById('results-container');
+            resultsContainer.innerHTML = `
+                <div class="flex-column">
+                    <h2>Eight-Ball Pool Analysis Results</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Statistic</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Total Shots</td>
+                                <td>${results.total_shots}</td>
+                            </tr>
+                            <tr>
+                                <td>Successful Potting Rate</td>
+                                <td>${results.potting_rate.toFixed(2)}%</td>
+                            </tr>
+                            <tr>
+                                <td>Foul Counts</td>
+                                <td>${results.foul_counts}</td>
+                            </tr>
+                            <tr>
+                                <td>Highest Consecutive Potting</td>
+                                <td>${results.max_consecutive_pots}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <video controls width="600" id="uploaded-video">
+                        <source src="" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            `;
+
+            document.getElementById('uploaded-video').querySelector('source').src = 'upload/' + filename;
+            document.getElementById('uploaded-video').load();
+        }
+    </script>
+</body>
+</html>
