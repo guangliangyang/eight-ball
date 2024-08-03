@@ -285,16 +285,30 @@ class EightBallGame:
 
         return canvas
 
-    def detect_eight_ball(self, frame, model):
+    def detect_eight_ball(self, frame, model, nms_threshold=0.4):
         results = model(frame)
         detected_objects = []
 
+        boxes = []
+        confidences = []
+
         for result in results:
-            boxes = result.boxes
-            for box in boxes:
+            for box in result.boxes:
                 x1, y1, x2, y2 = map(int, box.xyxy[0])
+                score = float(box.conf[0])  # Ensure the score is a float
                 cls = int(box.cls[0])
-                detected_objects.append((x1, y1, x2, y2, "", cls))
+                boxes.append([x1, y1, x2 - x1, y2 - y1])  # Convert to (x, y, width, height) format
+                confidences.append(score)
+
+        # Apply NMS
+        indices = cv2.dnn.NMSBoxes(boxes, confidences, score_threshold=0.05, nms_threshold=nms_threshold)
+
+        if len(indices) > 0:
+            if isinstance(indices[0], list):
+                indices = [i[0] for i in indices]
+            for i in indices:
+                x, y, w, h = boxes[i]
+                detected_objects.append((x, y, x + w, y + h, confidences[i], cls))
 
         return detected_objects
 
